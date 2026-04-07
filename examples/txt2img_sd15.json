@@ -1,0 +1,54 @@
+{
+  "3": {
+    "class_type": "KSampler",
+    "_meta": {"title": "KSampler $seed.seed,$steps.steps,$cfg.cfg"},
+    "inputs": {
+      "cfg": 8,
+      "denoise": 1,
+      "latent_image": ["5", 0],
+      "model": ["4", 0],
+      "negative": ["7", 0],
+      "positive": ["6", 0],
+      "sampler_name": "euler",
+      "scheduler": "normal",
+      "seed": 42,
+      "steps": 20
+    }
+  },
+  "4": {
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {"title": "Load Checkpoint"},
+    "inputs": {"ckpt_name": "v1-5-pruned-emaonly.safetensors"}
+  },
+  "5": {
+    "class_type": "EmptyLatentImage",
+    "_meta": {"title": "Empty Latent $width.width,$height.height"},
+    "inputs": {"batch_size": 1, "height": 512, "width": 512}
+  },
+  "6": {
+    "class_type": "CLIPTextEncode",
+    "_meta": {"title": "Positive $prompt.text"},
+    "inputs": {
+      "clip": ["4", 1],
+      "text": "a photo of a cat, masterpiece, best quality"
+    }
+  },
+  "7": {
+    "class_type": "CLIPTextEncode",
+    "_meta": {"title": "Negative $negative.text"},
+    "inputs": {
+      "clip": ["4", 1],
+      "text": "bad hands, low quality"
+    }
+  },
+  "8": {
+    "class_type": "VAEDecode",
+    "_meta": {"title": "VAE Decode"},
+    "inputs": {"samples": ["3", 0], "vae": ["4", 2]}
+  },
+  "9": {
+    "class_type": "SaveImage",
+    "_meta": {"title": "Save $output.image"},
+    "inputs": {"filename_prefix": "rest_api", "images": ["8", 0]}
+  }
+}
