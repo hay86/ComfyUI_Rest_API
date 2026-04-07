@@ -535,6 +535,74 @@ r = requests.post(f"{BASE}/execute", json={
 print(r["images"])
 ```
 
+### Video output with `VHS_VideoCombine`
+
+`VHS_VideoCombine` (from [ComfyUI-VideoHelperSuite](https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite))
+is the standard node for writing videos. Mark it with `$output.<name>`
+exactly like `SaveImage`:
+
+In the ComfyUI web UI, right-click the `VHS_VideoCombine` node and set
+its **Title** to:
+
+```
+Video Combine $output.video
+```
+
+That's the only change. Keep all widget defaults (`frame_rate`,
+`format`, `pingpong`, `save_output`, etc.) — the plugin does not
+touch them.
+
+**Response shape** after running such a workflow:
+
+```json
+{
+  "status": "completed",
+  "images": [
+    "http://127.0.0.1:8188/view?filename=AnimateDiff_00001.mp4&subfolder=&type=output"
+  ],
+  "images_by_var": {
+    "video": [
+      "http://127.0.0.1:8188/view?filename=AnimateDiff_00001.mp4&subfolder=&type=output"
+    ]
+  },
+  "texts_by_var": {}
+}
+```
+
+Notes:
+
+- The flat field is still called `images` (it's a media URL list; the
+  name is historical) but the value is a real `.mp4` / `.webm` / `.gif`
+  URL you can embed in `<video>` tags directly.
+- `VHS_VideoCombine` emits its outputs under the `gifs` key in ComfyUI's
+  history — the plugin already handles that, no extra config needed.
+- If you mark multiple output nodes, each gets its own key:
+  ```
+  $output.video     on VHS_VideoCombine
+  $output.preview   on SaveImage
+  ```
+  gives you `images_by_var.video` and `images_by_var.preview`.
+- Want to override the frame rate from the request? Add another marker
+  to the same node title:
+  ```
+  Video Combine $output.video,$fps.frame_rate
+  ```
+  Then call with `{"params": {"fps": 24}}`.
+
+**Minimal curl example** (assuming a saved workflow `txt2video` whose
+`VHS_VideoCombine` node is titled `$output.video` and whose prompt node
+is titled `$prompt.text`):
+
+```bash
+curl -X POST http://127.0.0.1:8188/rest/v1/execute \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "workflow": "txt2video",
+    "params": {"prompt": "a cat surfing a wave, cinematic"},
+    "timeout": 900
+  }'
+```
+
 ### Workflow as inline dict (no saved file)
 
 ```python
